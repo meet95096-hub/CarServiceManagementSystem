@@ -1,0 +1,160 @@
+@model IEnumerable<web.net.Models.RepairJobCard>
+@{
+    ViewData["Title"] = "Repair Tracker";
+}
+
+<div class="d-flex flex-column gap-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+            <h1 class="mb-1" style="font-size: 26px; font-weight: 800;">Repair Tracker & Job Cards</h1>
+            <p class="text-secondary mb-0" style="font-size: 14px;">Monitor live hoists, multi-point diagnostic checkpoints, labor tasks, and spare parts requisition.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Live" class="btn-apex btn-apex-secondary">
+                <i class="bi bi-broadcast text-danger"></i>
+                <span>Customer Live View</span>
+            </a>
+            <a asp-action="Create" class="btn-apex btn-apex-primary">
+                <i class="bi bi-plus-lg"></i>
+                <span>Open New Job Card</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Status Stage Filter Pills -->
+    <div class="d-flex flex-wrap gap-2">
+        <a asp-action="Index" class="btn-apex @(ViewBag.SelectedStatus == null ? "btn-apex-primary" : "btn-apex-secondary")" style="padding: 6px 14px; font-size: 12px;">
+            All Repairs (@Model.Count())
+        </a>
+        <a asp-action="Index" asp-route-status="PendingCheckIn" 
+           class="btn-apex @(ViewBag.SelectedStatus?.ToString() == "PendingCheckIn" ? "btn-apex-primary" : "btn-apex-secondary")" style="padding: 6px 14px; font-size: 12px;">
+            Check-In (@ViewBag.PendingCount)
+        </a>
+        <a asp-action="Index" asp-route-status="InspectionDiagnostic" 
+           class="btn-apex @(ViewBag.SelectedStatus?.ToString() == "InspectionDiagnostic" ? "btn-apex-primary" : "btn-apex-secondary")" style="padding: 6px 14px; font-size: 12px;">
+            Diagnostic (@ViewBag.DiagnosticCount)
+        </a>
+        <a asp-action="Index" asp-route-status="InProgress" 
+           class="btn-apex @(ViewBag.SelectedStatus?.ToString() == "InProgress" ? "btn-apex-primary" : "btn-apex-secondary")" style="padding: 6px 14px; font-size: 12px;">
+            In Progress (@ViewBag.InProgressCount)
+        </a>
+        <a asp-action="Index" asp-route-status="WaitingParts" 
+           class="btn-apex @(ViewBag.SelectedStatus?.ToString() == "WaitingParts" ? "btn-apex-primary" : "btn-apex-secondary")" style="padding: 6px 14px; font-size: 12px;">
+            Waiting Parts (@ViewBag.WaitingPartsCount)
+        </a>
+        <a asp-action="Index" asp-route-status="QualityCheck" 
+           class="btn-apex @(ViewBag.SelectedStatus?.ToString() == "QualityCheck" ? "btn-apex-primary" : "btn-apex-secondary")" style="padding: 6px 14px; font-size: 12px;">
+            Quality Check (@ViewBag.QualityCheckCount)
+        </a>
+        <a asp-action="Index" asp-route-status="ReadyForDelivery" 
+           class="btn-apex @(ViewBag.SelectedStatus?.ToString() == "ReadyForDelivery" ? "btn-apex-primary" : "btn-apex-secondary")" style="padding: 6px 14px; font-size: 12px;">
+            Ready for Delivery (@ViewBag.ReadyCount)
+        </a>
+        <a asp-action="Index" asp-route-status="Delivered" 
+           class="btn-apex @(ViewBag.SelectedStatus?.ToString() == "Delivered" ? "btn-apex-primary" : "btn-apex-secondary")" style="padding: 6px 14px; font-size: 12px;">
+            Delivered (@ViewBag.DeliveredCount)
+        </a>
+    </div>
+
+    <!-- Job Cards Table -->
+    <div class="glass-card">
+        @if (Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table-apex">
+                    <thead>
+                        <tr>
+                            <th>Job Card # & Vehicle</th>
+                            <th>Lead Tech & Bay</th>
+                            <th>Status & Progress</th>
+                            <th>Checklist & Scope</th>
+                            <th>Cost Estimate</th>
+                            <th>Invoice</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var job in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="fw-bold text-info" style="font-family: var(--font-mono); font-size: 13px;">
+                                        @job.JobCardNumber
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2 mt-1">
+                                        <span class="plate-tag" style="font-size: 11px; padding: 2px 6px;">@job.Vehicle?.LicensePlate</span>
+                                        <span class="text-white fw-semibold" style="font-size: 13px;">@job.Vehicle?.Make @job.Vehicle?.Model</span>
+                                    </div>
+                                    <div class="text-muted" style="font-size: 11px;">
+                                        Odometer: @job.OdometerIn.ToString("N0") km &bull; Client: @job.Vehicle?.OwnerName
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold text-white" style="font-size: 13px;">@(job.LeadMechanic?.FullName ?? "Unassigned")</div>
+                                    <div class="text-muted" style="font-size: 11px;">@job.Bay</div>
+                                    <div class="text-secondary" style="font-size: 11px;">Started: @job.StartedAt.ToString("MMM dd, hh:mm tt")</div>
+                                </td>
+                                <td style="min-width: 150px;">
+                                    <span class="badge @job.StatusBadgeClass mb-1">
+                                        @job.Status
+                                    </span>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="progress flex-grow-1" style="height: 6px; background-color: #1e293b; border-radius: 4px;">
+                                            <div class="progress-bar bg-info" role="progressbar" style="width: @(job.ProgressPercentage)%;"></div>
+                                        </div>
+                                        <span style="font-size: 11px; font-weight: 700; color: var(--text-muted);">@(job.ProgressPercentage)%</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="text-white" style="font-size: 12px;">
+                                        <i class="bi bi-check-circle text-success me-1"></i>@job.OverallInspectionGrade
+                                    </div>
+                                    <div class="text-muted mt-1" style="font-size: 11px;">
+                                        @job.LaborItems.Count Labor Tasks &bull; @job.PartItems.Count Parts Used
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-white fs-6">
+                                        $@job.EstimatedTotalCost.ToString("N2")
+                                    </div>
+                                    <div class="text-muted" style="font-size: 11px;">
+                                        Labor: $@job.TotalLaborCost.ToString("N0") | Parts: $@job.TotalPartsCost.ToString("N0")
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (job.Invoice != null)
+                                    {
+                                        <a asp-controller="Billing" asp-action="Details" asp-route-id="@job.Invoice.Id" 
+                                           class="badge @(job.Invoice.Status == InvoiceStatus.Paid ? "bg-success" : "bg-warning text-dark") text-decoration-none" style="font-size: 11px;">
+                                            <i class="bi bi-receipt me-1"></i>@job.Invoice.Status
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted" style="font-size: 11px;">Not Invoiced</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <a asp-action="Details" asp-route-id="@job.Id" class="btn-apex btn-apex-primary" style="padding: 6px 12px; font-size: 12px;">
+                                        <span>Manage</span>
+                                        <i class="bi bi-arrow-right"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="p-5 text-center text-muted">
+                <i class="bi bi-tools fs-1 d-block mb-3 text-secondary"></i>
+                <div class="fs-5 fw-bold text-white">No repair cards found</div>
+                <p class="text-secondary mb-3">No active jobs correspond to the chosen filter.</p>
+                <a asp-action="Create" class="btn-apex btn-apex-primary">Open New Repair Job Card</a>
+            </div>
+        }
+    </div>
+</div>

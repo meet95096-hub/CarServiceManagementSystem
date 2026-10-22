@@ -1,0 +1,301 @@
+@using web.net.Models
+@{
+    ViewData["Title"] = "Executive Dashboard";
+    var recentAppts = ViewBag.RecentAppointments as List<ServiceAppointment> ?? new List<ServiceAppointment>();
+    var activeJobs = ViewBag.ActiveJobs as List<RepairJobCard> ?? new List<RepairJobCard>();
+    var mechanics = ViewBag.Mechanics as List<Mechanic> ?? new List<Mechanic>();
+}
+
+<div class="d-flex flex-column gap-4">
+    <!-- Header Banner -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge" style="background: rgba(14, 165, 233, 0.15); color: #38bdf8; border: 1px solid rgba(14, 165, 233, 0.3);">
+                    <i class="bi bi-clock-history me-1"></i> Live Operations
+                </span>
+                <span class="text-muted" style="font-size: 13px;">Shift Status: Normal Flow</span>
+            </div>
+            <h1 class="mt-2 mb-1" style="font-size: 28px; font-weight: 800;">Car Service Command Center</h1>
+            <p class="text-secondary mb-0" style="font-size: 14px;">Real-time workshop telemetry, active repair bays, and service intake pipeline.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a asp-controller="RepairTracking" asp-action="Live" class="btn-apex btn-apex-secondary">
+                <i class="bi bi-broadcast text-danger"></i>
+                <span>Customer Live Track</span>
+            </a>
+            <a asp-controller="Appointments" asp-action="Create" class="btn-apex btn-apex-primary">
+                <i class="bi bi-calendar-plus"></i>
+                <span>New Appointment</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 4 KPI Metrics -->
+    <div class="row g-3">
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-title">Registered Fleet</div>
+                    <div class="stat-value">@ViewBag.TotalVehicles</div>
+                    <div class="stat-meta">
+                        <i class="bi bi-arrow-up-right text-success"></i>
+                        <span>Vehicles in registry</span>
+                    </div>
+                </div>
+                <div class="stat-icon blue">
+                    <i class="bi bi-car-front"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-title">Today's Appointments</div>
+                    <div class="stat-value">@ViewBag.TodayAppointments</div>
+                    <div class="stat-meta">
+                        <i class="bi bi-calendar-check text-info"></i>
+                        <span>Scheduled arrivals</span>
+                    </div>
+                </div>
+                <div class="stat-icon amber">
+                    <i class="bi bi-calendar3"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-title">Active Repair Jobs</div>
+                    <div class="stat-value">@ViewBag.ActiveRepairs</div>
+                    <div class="stat-meta">
+                        <i class="bi bi-gear-wide-connected text-warning"></i>
+                        <span>Currently on the hoist</span>
+                    </div>
+                </div>
+                <div class="stat-icon purple">
+                    <i class="bi bi-tools"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-title">Revenue Collected</div>
+                    <div class="stat-value">$@ViewBag.TotalRevenue.ToString("N2")</div>
+                    <div class="stat-meta">
+                        <i class="bi bi-wallet2 text-success"></i>
+                        <span>Pending: $@ViewBag.PendingReceivables.ToString("N2")</span>
+                    </div>
+                </div>
+                <div class="stat-icon green">
+                    <i class="bi bi-currency-dollar"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Workshop Service Bays Live Status -->
+    <div class="glass-card">
+        <div class="card-header-custom">
+            <div class="card-header-title">
+                <i class="bi bi-grid-3x3-gap-fill text-info"></i>
+                <span>Workshop Service Bays Real-Time Allocation</span>
+            </div>
+            <a asp-controller="Mechanics" asp-action="Index" class="btn-apex btn-apex-secondary" style="padding: 6px 12px; font-size: 12px;">
+                Manage Technicians
+            </a>
+        </div>
+        <div class="card-body-custom">
+            <div class="row g-3">
+                @foreach (var mechanic in mechanics)
+                {
+                    var activeJob = mechanic.LeadJobs.FirstOrDefault();
+                    bool isOccupied = activeJob != null;
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        <div class="bay-status-card @(isOccupied ? "occupied" : "free")">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span style="font-size: 13px; font-weight: 700; color: #fff;">@mechanic.AssignedBay</span>
+                                @if (isOccupied)
+                                {
+                                    <span class="badge" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); font-size: 10px;">OCCUPIED</span>
+                                }
+                                else
+                                {
+                                    <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 10px;">AVAILABLE</span>
+                                }
+                            </div>
+
+                            <div class="d-flex align-items-center gap-2 mt-1">
+                                <div style="width: 28px; height: 28px; border-radius: 50%; background: #223048; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #38bdf8;">
+                                    @mechanic.AvatarInitials
+                                </div>
+                                <div>
+                                    <div style="font-size: 12px; font-weight: 600; color: #e2e8f0;">@mechanic.FullName</div>
+                                    <div style="font-size: 11px; color: var(--text-muted);">@mechanic.Specialization</div>
+                                </div>
+                            </div>
+
+                            <div class="pt-2 border-top" style="border-color: rgba(255,255,255,0.06) !important; font-size: 12px;">
+                                @if (isOccupied && activeJob != null && activeJob.Vehicle != null)
+                                {
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="plate-tag" style="font-size: 11px; padding: 2px 6px;">@activeJob.Vehicle.LicensePlate</span>
+                                        <span class="text-secondary">@activeJob.Status</span>
+                                    </div>
+                                    <div class="text-truncate text-muted mt-1" style="font-size: 11px;">
+                                        @activeJob.Vehicle.Make @activeJob.Vehicle.Model
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted fst-italic">Ready for next assignment</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Repairs & Today's Appointments Side by Side -->
+    <div class="row g-4">
+        <!-- Active Repair Tracking -->
+        <div class="col-12 col-xl-7">
+            <div class="glass-card h-100">
+                <div class="card-header-custom">
+                    <div class="card-header-title">
+                        <i class="bi bi-wrench-adjustable text-primary"></i>
+                        <span>Active Repair Job Cards</span>
+                    </div>
+                    <a asp-controller="RepairTracking" asp-action="Index" class="btn-apex btn-apex-secondary" style="padding: 6px 12px; font-size: 12px;">
+                        View All (@ViewBag.ActiveRepairs)
+                    </a>
+                </div>
+                <div class="p-0">
+                    @if (activeJobs.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table-apex">
+                                <thead>
+                                    <tr>
+                                        <th>Job # & Vehicle</th>
+                                        <th>Technician</th>
+                                        <th>Current Stage</th>
+                                        <th>Progress</th>
+                                        <th class="text-end">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var job in activeJobs)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="fw-bold" style="font-family: var(--font-mono); font-size: 13px; color: #38bdf8;">
+                                                    @job.JobCardNumber
+                                                </div>
+                                                <div class="d-flex align-items-center gap-2 mt-1">
+                                                    <span class="plate-tag" style="font-size: 11px; padding: 2px 6px;">@job.Vehicle?.LicensePlate</span>
+                                                    <span class="text-secondary" style="font-size: 12px;">@job.Vehicle?.Make @job.Vehicle?.Model</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div style="font-size: 13px; font-weight: 500;">@(job.LeadMechanic?.FullName ?? "Unassigned")</div>
+                                                <div style="font-size: 11px; color: var(--text-muted);">@job.Bay</div>
+                                            </td>
+                                            <td>
+                                                <span class="badge @job.StatusBadgeClass" style="font-size: 11px; padding: 4px 8px;">
+                                                    @job.Status
+                                                </span>
+                                            </td>
+                                            <td style="min-width: 120px;">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <div class="progress flex-grow-1" style="height: 6px; background-color: #1e293b; border-radius: 4px;">
+                                                        <div class="progress-bar bg-info" role="progressbar" style="width: @(job.ProgressPercentage)%;"></div>
+                                                    </div>
+                                                    <span style="font-size: 11px; font-weight: 700; color: var(--text-muted);">@(job.ProgressPercentage)%</span>
+                                                </div>
+                                            </td>
+                                            <td class="text-end">
+                                                <a asp-controller="RepairTracking" asp-action="Details" asp-route-id="@job.Id" 
+                                                   class="btn-apex btn-apex-secondary" style="padding: 5px 10px; font-size: 12px;">
+                                                    <span>Open Card</span>
+                                                    <i class="bi bi-chevron-right"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="p-4 text-center text-muted">
+                            <i class="bi bi-check2-circle fs-2 d-block mb-2 text-success"></i>
+                            All repair jobs are currently completed and delivered!
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming & Recent Appointments -->
+        <div class="col-12 col-xl-5">
+            <div class="glass-card h-100">
+                <div class="card-header-custom">
+                    <div class="card-header-title">
+                        <i class="bi bi-calendar-event text-warning"></i>
+                        <span>Recent & Scheduled Bookings</span>
+                    </div>
+                    <a asp-controller="Appointments" asp-action="Index" class="btn-apex btn-apex-secondary" style="padding: 6px 12px; font-size: 12px;">
+                        All Bookings
+                    </a>
+                </div>
+                <div class="card-body-custom p-3">
+                    @if (recentAppts.Any())
+                    {
+                        <div class="d-flex flex-column gap-3">
+                            @foreach (var appt in recentAppts)
+                            {
+                                <div class="p-3 rounded-3" style="background-color: var(--bg-surface); border: 1px solid var(--border-subtle);">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <span class="plate-tag" style="font-size: 12px; padding: 2px 7px;">@appt.Vehicle?.LicensePlate</span>
+                                            <span class="ms-2 fw-semibold" style="font-size: 14px; color: #f1f5f9;">@appt.Vehicle?.OwnerName</span>
+                                        </div>
+                                        <span class="badge @(appt.Status == AppointmentStatus.InService ? "bg-warning text-dark" : appt.Status == AppointmentStatus.Completed ? "bg-success" : "bg-primary")" style="font-size: 11px;">
+                                            @appt.Status
+                                        </span>
+                                    </div>
+                                    <div class="fw-medium text-info" style="font-size: 13px; margin-bottom: 4px;">
+                                        @appt.ServiceTitle
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between text-muted" style="font-size: 12px;">
+                                        <div>
+                                            <i class="bi bi-clock me-1"></i>
+                                            <span>@appt.ScheduledDate.ToString("MMM dd") &bull; @appt.TimeSlot</span>
+                                        </div>
+                                        <a asp-controller="Appointments" asp-action="Details" asp-route-id="@appt.Id" class="text-decoration-none fw-semibold" style="color: #38bdf8;">
+                                            Details &rarr;
+                                        </a>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted py-4">
+                            No appointments found.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

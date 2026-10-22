@@ -1,0 +1,104 @@
+@model web.net.Models.RepairJobCard
+@{
+    ViewData["Title"] = "Open Repair Job Card";
+}
+
+<div class="d-flex flex-column gap-4" style="max-width: 900px; margin: 0 auto;">
+    <!-- Breadcrumb -->
+    <div>
+        <a asp-action="Index" class="text-secondary" style="font-size: 13px;">
+            <i class="bi bi-arrow-left me-1"></i> Back to Repair Tracker
+        </a>
+        <h1 class="mt-2 mb-1" style="font-size: 26px; font-weight: 800;">Open Workshop Repair Job Card</h1>
+        <p class="text-secondary mb-0" style="font-size: 14px;">Initiate hoist check-in, assign lead mechanic, record odometer, and begin diagnosis.</p>
+    </div>
+
+    <div class="glass-card">
+        <form asp-action="Create" method="post" class="card-body-custom">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-12 col-md-6">
+                    <label asp-for="JobCardNumber" class="form-label-custom"></label>
+                    <input asp-for="JobCardNumber" class="form-control-custom text-uppercase" readonly style="font-family: var(--font-mono); background-color: rgba(0,0,0,0.2);" />
+                    <span asp-validation-for="JobCardNumber" class="text-danger" style="font-size: 12px;"></span>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label asp-for="VehicleId" class="form-label-custom mb-0"></label>
+                        <a asp-controller="Vehicles" asp-action="Create" target="_blank" style="font-size: 12px;">
+                            + Register New Vehicle
+                        </a>
+                    </div>
+                    <select asp-for="VehicleId" asp-items="ViewBag.VehiclesList" class="form-select-custom" required>
+                        <option value="">-- Choose Registered Vehicle --</option>
+                    </select>
+                    <span asp-validation-for="VehicleId" class="text-danger" style="font-size: 12px;"></span>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <label asp-for="OdometerIn" class="form-label-custom"></label>
+                    <div class="input-group">
+                        <input asp-for="OdometerIn" type="number" class="form-control-custom" placeholder="e.g. 35000" required />
+                        <span class="input-group-text border-0" style="background-color: var(--bg-surface); color: var(--text-muted);">km</span>
+                    </div>
+                    <span asp-validation-for="OdometerIn" class="text-danger" style="font-size: 12px;"></span>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <label asp-for="LeadMechanicId" class="form-label-custom"></label>
+                    <select asp-for="LeadMechanicId" asp-items="ViewBag.MechanicsList" class="form-select-custom">
+                        <option value="">-- Assign Lead Mechanic --</option>
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <label asp-for="Bay" class="form-label-custom"></label>
+                    <select asp-for="Bay" class="form-select-custom">
+                        <option value="Bay 1 - Diagnostics & Engine">Bay 1 - Diagnostics & Engine</option>
+                        <option value="Bay 2 - Brake & Chassis">Bay 2 - Brake & Chassis</option>
+                        <option value="Bay 3 - Electrical & HVAC">Bay 3 - Electrical & HVAC</option>
+                        <option value="Bay 4 - Express Lube & Tires">Bay 4 - Express Lube & Tires</option>
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label asp-for="EstimatedCompletionAt" class="form-label-custom"></label>
+                    <input asp-for="EstimatedCompletionAt" type="datetime-local" class="form-control-custom" />
+                    <span asp-validation-for="EstimatedCompletionAt" class="text-danger" style="font-size: 12px;"></span>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label asp-for="Status" class="form-label-custom"></label>
+                    <select asp-for="Status" class="form-select-custom">
+                        <option value="PendingCheckIn">Pending Check-In</option>
+                        <option value="InspectionDiagnostic">Inspection & Diagnostics</option>
+                        <option value="InProgress" selected>In Progress (Active Work)</option>
+                    </select>
+                </div>
+
+                <div class="col-12">
+                    <label asp-for="DiagnosticNotes" class="form-label-custom"></label>
+                    <textarea asp-for="DiagnosticNotes" rows="3" class="form-control-custom" 
+                              placeholder="Reported issues, check engine trouble codes, initial inspection walkthrough findings..."></textarea>
+                </div>
+
+                <div class="col-12">
+                    <label asp-for="WorkPerformedSummary" class="form-label-custom"></label>
+                    <textarea asp-for="WorkPerformedSummary" rows="3" class="form-control-custom" 
+                              placeholder="Approved scope of work, labor requirements, or parts to be replaced..."></textarea>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-3 pt-3 border-top" style="border-color: var(--border-subtle) !important;">
+                <a asp-action="Index" class="btn-apex btn-apex-secondary">Cancel</a>
+                <button type="submit" class="btn-apex btn-apex-primary px-4">
+                    <i class="bi bi-tools"></i>
+                    <span>Open Job Card</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

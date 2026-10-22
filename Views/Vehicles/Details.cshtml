@@ -1,0 +1,326 @@
+@model web.net.Models.Vehicle
+@{
+    ViewData["Title"] = $"{Model.LicensePlate} - {Model.Make} {Model.Model}";
+    decimal totalSpent = Model.Invoices.Where(i => i.Status == InvoiceStatus.Paid).Sum(i => i.AmountPaid);
+}
+
+<div class="d-flex flex-column gap-4">
+    <!-- Breadcrumb & Top Bar -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <a asp-action="Index" class="text-secondary" style="font-size: 13px;">
+                    <i class="bi bi-arrow-left me-1"></i> Vehicle Registry
+                </a>
+                <span class="text-muted">/</span>
+                <span class="text-muted" style="font-size: 13px;">Dossier</span>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <span class="plate-tag accent fs-6 px-3 py-1">@Model.LicensePlate</span>
+                <h1 class="mb-0" style="font-size: 26px; font-weight: 800;">@Model.Year @Model.Make @Model.Model</h1>
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+            <a asp-controller="Appointments" asp-action="Create" asp-route-vehicleId="@Model.Id" class="btn-apex btn-apex-primary">
+                <i class="bi bi-calendar-plus"></i>
+                <span>Book Appointment</span>
+            </a>
+            <a asp-controller="RepairTracking" asp-action="Create" asp-route-vehicleId="@Model.Id" class="btn-apex btn-apex-secondary">
+                <i class="bi bi-tools"></i>
+                <span>Open Repair Card</span>
+            </a>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-apex btn-apex-secondary" title="Edit">
+                <i class="bi bi-pencil"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Stat Badges -->
+    <div class="row g-3">
+        <div class="col-12 col-sm-6 col-md-3">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-title">Current Odometer</div>
+                    <div class="stat-value">@Model.CurrentMileage.ToString("N0") <span style="font-size: 14px; font-weight: 400; color: #94a3b8;">km</span></div>
+                    <div class="stat-meta">Recorded reading</div>
+                </div>
+                <div class="stat-icon blue"><i class="bi bi-speedometer2"></i></div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-md-3">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-title">Total Visits</div>
+                    <div class="stat-value">@Model.RepairJobs.Count</div>
+                    <div class="stat-meta">Repair job cards logged</div>
+                </div>
+                <div class="stat-icon purple"><i class="bi bi-wrench"></i></div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-md-3">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-title">Lifetime Spent</div>
+                    <div class="stat-value">$@totalSpent.ToString("N2")</div>
+                    <div class="stat-meta">Paid service invoices</div>
+                </div>
+                <div class="stat-icon green"><i class="bi bi-cash-stack"></i></div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-md-3">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-title">Registered Since</div>
+                    <div class="stat-value" style="font-size: 20px;">@Model.RegisteredAt.ToString("MMM yyyy")</div>
+                    <div class="stat-meta">Client loyalty tracking</div>
+                </div>
+                <div class="stat-icon amber"><i class="bi bi-clock-history"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Two Columns: Technical Dossier + Owner Info -->
+    <div class="row g-4">
+        <!-- Vehicle Specs -->
+        <div class="col-12 col-lg-7">
+            <div class="glass-card h-100">
+                <div class="card-header-custom">
+                    <div class="card-header-title">
+                        <i class="bi bi-cpu text-info"></i>
+                        <span>Technical Specifications</span>
+                    </div>
+                </div>
+                <div class="card-body-custom">
+                    <div class="row g-3">
+                        <div class="col-6 col-md-4">
+                            <div class="text-muted" style="font-size: 11px; text-transform: uppercase;">Make / Brand</div>
+                            <div class="fw-bold text-white fs-6">@Model.Make</div>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <div class="text-muted" style="font-size: 11px; text-transform: uppercase;">Model Variant</div>
+                            <div class="fw-bold text-white fs-6">@Model.Model</div>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <div class="text-muted" style="font-size: 11px; text-transform: uppercase;">Model Year</div>
+                            <div class="fw-bold text-white fs-6">@Model.Year</div>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <div class="text-muted" style="font-size: 11px; text-transform: uppercase;">Color Finish</div>
+                            <div class="fw-bold text-white fs-6">@Model.Color</div>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <div class="text-muted" style="font-size: 11px; text-transform: uppercase;">Powertrain</div>
+                            <div class="fw-bold text-white fs-6">@Model.FuelType</div>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <div class="text-muted" style="font-size: 11px; text-transform: uppercase;">Transmission</div>
+                            <div class="fw-bold text-white fs-6">@Model.Transmission</div>
+                        </div>
+                        <div class="col-12">
+                            <div class="p-3 rounded-3" style="background-color: var(--bg-surface); border: 1px solid var(--border-subtle);">
+                                <div class="text-muted" style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Vehicle Identification Number (VIN)</div>
+                                <div class="fw-bold text-info fs-6 mt-1" style="font-family: var(--font-mono); letter-spacing: 1.5px;">
+                                    @(Model.Vin ?? "VIN NOT SPECIFIED")
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Owner / Client Card -->
+        <div class="col-12 col-lg-5">
+            <div class="glass-card h-100">
+                <div class="card-header-custom">
+                    <div class="card-header-title">
+                        <i class="bi bi-person-circle text-primary"></i>
+                        <span>Client Information</span>
+                    </div>
+                </div>
+                <div class="card-body-custom">
+                    <div class="d-flex align-items-center gap-3 mb-4">
+                        <div style="width: 52px; height: 52px; border-radius: 14px; background: linear-gradient(135deg, #0ea5e9, #6366f1); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: #fff;">
+                            @(Model.OwnerName.Length > 0 ? Model.OwnerName.Substring(0, 1) : "C")
+                        </div>
+                        <div>
+                            <div class="fw-bold fs-5 text-white">@Model.OwnerName</div>
+                            <div class="text-secondary" style="font-size: 12px;">Registered Vehicle Owner</div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-column gap-3">
+                        <div class="d-flex align-items-center gap-3 p-2 rounded" style="background: rgba(255,255,255,0.02);">
+                            <i class="bi bi-telephone text-primary fs-5"></i>
+                            <div>
+                                <div class="text-muted" style="font-size: 11px;">Primary Phone</div>
+                                <div class="fw-semibold text-white">@Model.OwnerPhone</div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-3 p-2 rounded" style="background: rgba(255,255,255,0.02);">
+                            <i class="bi bi-envelope text-primary fs-5"></i>
+                            <div>
+                                <div class="text-muted" style="font-size: 11px;">Email Address</div>
+                                <div class="fw-semibold text-white">@(Model.OwnerEmail ?? "Not provided")</div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-3 p-2 rounded" style="background: rgba(255,255,255,0.02);">
+                            <i class="bi bi-geo-alt text-primary fs-5"></i>
+                            <div>
+                                <div class="text-muted" style="font-size: 11px;">Billing & Home Address</div>
+                                <div class="fw-semibold text-white">@(Model.OwnerAddress ?? "Not specified")</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Repair Job Cards History -->
+    <div class="glass-card">
+        <div class="card-header-custom">
+            <div class="card-header-title">
+                <i class="bi bi-clock-history text-warning"></i>
+                <span>Repair & Service History (@Model.RepairJobs.Count)</span>
+            </div>
+            <a asp-controller="RepairTracking" asp-action="Create" asp-route-vehicleId="@Model.Id" class="btn-apex btn-apex-primary" style="padding: 6px 14px; font-size: 12px;">
+                <i class="bi bi-plus-lg"></i>
+                <span>Open New Job Card</span>
+            </a>
+        </div>
+        <div class="p-0">
+            @if (Model.RepairJobs.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table-apex">
+                        <thead>
+                            <tr>
+                                <th>Job Card #</th>
+                                <th>Date Logged</th>
+                                <th>Lead Technician</th>
+                                <th>Inspection Grade</th>
+                                <th>Labor & Parts</th>
+                                <th>Status</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var job in Model.RepairJobs.OrderByDescending(j => j.StartedAt))
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold" style="font-family: var(--font-mono); color: #38bdf8;">
+                                            @job.JobCardNumber
+                                        </div>
+                                        <div class="text-muted" style="font-size: 11px;">Odometer: @job.OdometerIn.ToString("N0") km</div>
+                                    </td>
+                                    <td>
+                                        <div class="text-white" style="font-size: 13px;">@job.StartedAt.ToString("MMM dd, yyyy")</div>
+                                        <div class="text-muted" style="font-size: 11px;">@job.StartedAt.ToString("hh:mm tt")</div>
+                                    </td>
+                                    <td>
+                                        <div class="text-white">@(job.LeadMechanic?.FullName ?? "Unassigned")</div>
+                                        <div class="text-muted" style="font-size: 11px;">@job.Bay</div>
+                                    </td>
+                                    <td>
+                                        <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">
+                                            @job.OverallInspectionGrade
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div style="font-size: 13px; font-weight: 600; color: #f1f5f9;">
+                                            $@job.EstimatedTotalCost.ToString("N2")
+                                        </div>
+                                        <div class="text-muted" style="font-size: 11px;">
+                                            @job.LaborItems.Count tasks &bull; @job.PartItems.Count parts
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge @job.StatusBadgeClass">
+                                            @job.Status
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <a asp-controller="RepairTracking" asp-action="Details" asp-route-id="@job.Id" 
+                                           class="btn-apex btn-apex-secondary" style="padding: 5px 12px; font-size: 12px;">
+                                            View Card &rarr;
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="p-4 text-center text-muted">
+                    No repair records found for this vehicle.
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Invoices History -->
+    @if (Model.Invoices.Any())
+    {
+        <div class="glass-card">
+            <div class="card-header-custom">
+                <div class="card-header-title">
+                    <i class="bi bi-receipt-cutoff text-success"></i>
+                    <span>Invoices & Billing History</span>
+                </div>
+            </div>
+            <div class="p-0">
+                <div class="table-responsive">
+                    <table class="table-apex">
+                        <thead>
+                            <tr>
+                                <th>Invoice #</th>
+                                <th>Issue Date</th>
+                                <th>Grand Total</th>
+                                <th>Paid Amount</th>
+                                <th>Balance Due</th>
+                                <th>Payment Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var inv in Model.Invoices.OrderByDescending(i => i.InvoiceDate))
+                            {
+                                <tr>
+                                    <td>
+                                        <span class="fw-bold text-info" style="font-family: var(--font-mono);">@inv.InvoiceNumber</span>
+                                    </td>
+                                    <td>@inv.InvoiceDate.ToString("MMM dd, yyyy")</td>
+                                    <td class="fw-bold text-white">$@inv.GrandTotal.ToString("N2")</td>
+                                    <td class="text-success">$@inv.AmountPaid.ToString("N2")</td>
+                                    <td class="@(inv.BalanceDue > 0 ? "text-danger fw-bold" : "text-muted")">
+                                        $@inv.BalanceDue.ToString("N2")
+                                    </td>
+                                    <td>
+                                        <span class="badge @(inv.Status == InvoiceStatus.Paid ? "bg-success" : inv.Status == InvoiceStatus.PartiallyPaid ? "bg-warning text-dark" : "bg-danger")">
+                                            @inv.Status
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <a asp-controller="Billing" asp-action="Details" asp-route-id="@inv.Id" class="btn-apex btn-apex-secondary" style="padding: 5px 10px; font-size: 12px;">
+                                            View Bill
+                                        </a>
+                                        <a asp-controller="Billing" asp-action="Print" asp-route-id="@inv.Id" target="_blank" class="btn-apex btn-apex-primary" style="padding: 5px 10px; font-size: 12px;">
+                                            <i class="bi bi-printer"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>

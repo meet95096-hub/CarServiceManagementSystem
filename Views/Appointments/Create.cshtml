@@ -1,0 +1,143 @@
+@model web.net.Models.ServiceAppointment
+@{
+    ViewData["Title"] = "Book Service Appointment";
+}
+
+<div class="d-flex flex-column gap-4" style="max-width: 900px; margin: 0 auto;">
+    <!-- Breadcrumb -->
+    <div>
+        <a asp-action="Index" class="text-secondary" style="font-size: 13px;">
+            <i class="bi bi-arrow-left me-1"></i> Back to Appointments
+        </a>
+        <h1 class="mt-2 mb-1" style="font-size: 26px; font-weight: 800;">Book Service Appointment</h1>
+        <p class="text-secondary mb-0" style="font-size: 14px;">Schedule maintenance slot, assign master technician, and reserve workshop bay.</p>
+    </div>
+
+    <div class="glass-card">
+        <form asp-action="Create" method="post" class="card-body-custom">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-12 col-md-6">
+                    <label asp-for="AppointmentCode" class="form-label-custom"></label>
+                    <input asp-for="AppointmentCode" class="form-control-custom text-uppercase" readonly style="font-family: var(--font-mono); background-color: rgba(0,0,0,0.2);" />
+                    <span asp-validation-for="AppointmentCode" class="text-danger" style="font-size: 12px;"></span>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label asp-for="VehicleId" class="form-label-custom mb-0"></label>
+                        <a asp-controller="Vehicles" asp-action="Create" target="_blank" style="font-size: 12px;">
+                            + Register New Vehicle
+                        </a>
+                    </div>
+                    <select asp-for="VehicleId" asp-items="ViewBag.VehiclesList" class="form-select-custom" required>
+                        <option value="">-- Choose Registered Vehicle --</option>
+                    </select>
+                    <span asp-validation-for="VehicleId" class="text-danger" style="font-size: 12px;"></span>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label asp-for="ServicePackageId" class="form-label-custom"></label>
+                    <select asp-for="ServicePackageId" asp-items="ViewBag.PackagesList" class="form-select-custom" id="packageSelect">
+                        <option value="">-- Custom / Inspection Only --</option>
+                    </select>
+                    <span asp-validation-for="ServicePackageId" class="text-danger" style="font-size: 12px;"></span>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label asp-for="ServiceTitle" class="form-label-custom"></label>
+                    <input asp-for="ServiceTitle" class="form-control-custom" id="serviceTitleInput" placeholder="e.g. Periodic Maintenance, Brake Check" required />
+                    <span asp-validation-for="ServiceTitle" class="text-danger" style="font-size: 12px;"></span>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <label asp-for="ScheduledDate" class="form-label-custom"></label>
+                    <input asp-for="ScheduledDate" type="date" class="form-control-custom" />
+                    <span asp-validation-for="ScheduledDate" class="text-danger" style="font-size: 12px;"></span>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <label asp-for="TimeSlot" class="form-label-custom"></label>
+                    <select asp-for="TimeSlot" class="form-select-custom">
+                        <option value="08:30 AM - 10:30 AM">08:30 AM - 10:30 AM (Early Intake)</option>
+                        <option value="09:00 AM - 11:00 AM" selected>09:00 AM - 11:00 AM (Morning Slot)</option>
+                        <option value="11:30 AM - 01:30 PM">11:30 AM - 01:30 PM (Midday Slot)</option>
+                        <option value="02:00 PM - 04:00 PM">02:00 PM - 04:00 PM (Afternoon Slot)</option>
+                        <option value="04:30 PM - 06:30 PM">04:30 PM - 06:30 PM (Evening Quick)</option>
+                    </select>
+                    <span asp-validation-for="TimeSlot" class="text-danger" style="font-size: 12px;"></span>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <label asp-for="EstimatedCost" class="form-label-custom"></label>
+                    <div class="input-group">
+                        <span class="input-group-text border-0" style="background-color: var(--bg-surface); color: var(--text-muted);">$</span>
+                        <input asp-for="EstimatedCost" type="number" step="0.01" class="form-control-custom" id="estCostInput" placeholder="0.00" />
+                    </div>
+                    <span asp-validation-for="EstimatedCost" class="text-danger" style="font-size: 12px;"></span>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label asp-for="MechanicId" class="form-label-custom"></label>
+                    <select asp-for="MechanicId" asp-items="ViewBag.MechanicsList" class="form-select-custom">
+                        <option value="">-- Assign Bay Lead (Auto / Next Available) --</option>
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label asp-for="Bay" class="form-label-custom"></label>
+                    <select asp-for="Bay" class="form-select-custom">
+                        <option value="Bay 1 - Diagnostics & Engine">Bay 1 - Diagnostics & Engine</option>
+                        <option value="Bay 2 - Brake & Chassis">Bay 2 - Brake & Chassis</option>
+                        <option value="Bay 3 - Electrical & HVAC">Bay 3 - Electrical & HVAC</option>
+                        <option value="Bay 4 - Express Lube & Tires">Bay 4 - Express Lube & Tires</option>
+                    </select>
+                </div>
+
+                <div class="col-12">
+                    <label asp-for="CustomerNotes" class="form-label-custom"></label>
+                    <textarea asp-for="CustomerNotes" rows="3" class="form-control-custom" 
+                              placeholder="Customer remarks, strange noises, warning lights, or special service requests..."></textarea>
+                    <span asp-validation-for="CustomerNotes" class="text-danger" style="font-size: 12px;"></span>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-3 pt-3 border-top" style="border-color: var(--border-subtle) !important;">
+                <a asp-action="Index" class="btn-apex btn-apex-secondary">Cancel</a>
+                <button type="submit" class="btn-apex btn-apex-primary px-4">
+                    <i class="bi bi-calendar-check"></i>
+                    <span>Confirm & Book Appointment</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const packageSelect = document.getElementById('packageSelect');
+        const serviceTitleInput = document.getElementById('serviceTitleInput');
+        const estCostInput = document.getElementById('estCostInput');
+
+        if (packageSelect) {
+            packageSelect.addEventListener('change', function () {
+                const selectedText = packageSelect.options[packageSelect.selectedIndex].text;
+                if (packageSelect.value) {
+                    // Extract name and price
+                    const parts = selectedText.split('($');
+                    if (parts.length > 0) {
+                        serviceTitleInput.value = parts[0].trim();
+                    }
+                    if (parts.length > 1) {
+                        const price = parseFloat(parts[1].replace(')', '').trim());
+                        if (!isNaN(price)) {
+                            estCostInput.value = price.toFixed(2);
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+}

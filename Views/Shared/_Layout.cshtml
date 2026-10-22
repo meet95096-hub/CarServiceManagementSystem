@@ -1,0 +1,174 @@
+@inject web.net.Models.DatabaseStatusInfo DbInfo
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ApexAuto Service Management</title>
+    
+    <!-- Google Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <!-- ApexAuto Custom Modern Dark Automotive Design System -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="app-wrapper">
+        <!-- Sidebar Navigation -->
+        <aside class="app-sidebar" id="appSidebar">
+            <div class="sidebar-brand">
+                <div class="brand-icon-box">
+                    <i class="bi bi-gear-fill"></i>
+                </div>
+                <div>
+                    <div class="brand-title">APEXAUTO</div>
+                    <div class="brand-subtitle">SERVICE DYNAMICS</div>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section-title">Core Operations</div>
+                <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Dashboard" ? "active" : "")" 
+                   asp-controller="Dashboard" asp-action="Index">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Vehicles" ? "active" : "")" 
+                   asp-controller="Vehicles" asp-action="Index">
+                    <i class="bi bi-car-front-fill"></i>
+                    <span>Vehicle Registry</span>
+                </a>
+                <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Appointments" ? "active" : "")" 
+                   asp-controller="Appointments" asp-action="Index">
+                    <i class="bi bi-calendar-check-fill"></i>
+                    <span>Appointments</span>
+                </a>
+
+                <div class="nav-section-title">Workshop Floor</div>
+                <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "RepairTracking" && ViewContext.RouteData.Values["Action"]?.ToString() != "Live" ? "active" : "")" 
+                   asp-controller="RepairTracking" asp-action="Index">
+                    <i class="bi bi-tools"></i>
+                    <span>Repair Tracker</span>
+                </a>
+                <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "RepairTracking" && ViewContext.RouteData.Values["Action"]?.ToString() == "Live" ? "active" : "")" 
+                   asp-controller="RepairTracking" asp-action="Live">
+                    <i class="bi bi-broadcast"></i>
+                    <span>Customer Live Track</span>
+                    <span class="sidebar-badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">LIVE</span>
+                </a>
+                <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Mechanics" ? "active" : "")" 
+                   asp-controller="Mechanics" asp-action="Index">
+                    <i class="bi bi-person-badge-fill"></i>
+                    <span>Bays & Technicians</span>
+                </a>
+
+                <div class="nav-section-title">Finance & Billing</div>
+                <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Billing" ? "active" : "")" 
+                   asp-controller="Billing" asp-action="Index">
+                    <i class="bi bi-receipt-cutoff"></i>
+                    <span>Invoices & Billing</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="db-pill">
+                    <div class="db-status-dot"></div>
+                    <div>
+                        <strong style="color: #ffffff;">@DbInfo.Provider</strong> Connected
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="app-main">
+            <!-- Topbar Header -->
+            <header class="app-topbar no-print">
+                <div class="topbar-left">
+                    <button class="mobile-menu-btn" id="mobileMenuToggle" type="button" aria-label="Toggle menu">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    <div class="d-none d-md-flex align-items-center gap-2 text-muted" style="font-size: 13px;">
+                        <i class="bi bi-shield-check text-success"></i>
+                        <span>System Online &bull; Active Shift Bay Monitoring</span>
+                    </div>
+                </div>
+
+                <div class="topbar-right">
+                    <!-- Quick action buttons -->
+                    <a asp-controller="Vehicles" asp-action="Create" class="btn-apex btn-apex-secondary" style="padding: 8px 14px; font-size: 13px;">
+                        <i class="bi bi-plus-lg"></i>
+                        <span>Register Vehicle</span>
+                    </a>
+                    <a asp-controller="Appointments" asp-action="Create" class="btn-apex btn-apex-primary" style="padding: 8px 14px; font-size: 13px;">
+                        <i class="bi bi-calendar-plus"></i>
+                        <span>Book Service</span>
+                    </a>
+                    
+                    <div class="d-none d-sm-flex align-items-center gap-2 ps-3 border-start border-secondary">
+                        <div style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #1d4ed8); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; font-size: 14px;">
+                            AD
+                        </div>
+                        <div class="d-none d-lg-block">
+                            <div style="font-size: 13px; font-weight: 700; color: #fff; line-height: 1.2;">Admin Desk</div>
+                            <div style="font-size: 11px; color: var(--text-muted);">Service Director</div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Body Content -->
+            <main class="content-body" role="main">
+                <!-- Alerts / Flash Messages -->
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-dismissible fade show d-flex align-items-center gap-3 no-print" role="alert"
+                         style="background-color: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); color: #34d399; border-radius: 12px; padding: 14px 20px;">
+                        <i class="bi bi-check-circle-fill fs-5"></i>
+                        <div class="flex-grow-1">@TempData["SuccessMessage"]</div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
+                @if (TempData["ErrorMessage"] != null)
+                {
+                    <div class="alert alert-dismissible fade show d-flex align-items-center gap-3 no-print" role="alert"
+                         style="background-color: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.35); color: #fb7185; border-radius: 12px; padding: 14px 20px;">
+                        <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+                        <div class="flex-grow-1">@TempData["ErrorMessage"]</div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        // Mobile Sidebar Toggle
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const appSidebar = document.getElementById('appSidebar');
+        if (mobileMenuToggle && appSidebar) {
+            mobileMenuToggle.addEventListener('click', () => {
+                appSidebar.classList.toggle('show');
+            });
+            document.addEventListener('click', (e) => {
+                if (!appSidebar.contains(e.target) && !mobileMenuToggle.contains(e.target) && appSidebar.classList.contains('show')) {
+                    appSidebar.classList.remove('show');
+                }
+            });
+        }
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

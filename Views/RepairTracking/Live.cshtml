@@ -1,0 +1,219 @@
+@model web.net.Models.RepairJobCard
+@{
+    ViewData["Title"] = "Customer Live Repair Tracker";
+    int currentStepIndex = Model != null ? (int)Model.Status : 0;
+    var stages = new[] {
+        ("Check-In", "bi-box-arrow-in-down"),
+        ("Diagnostic", "bi-cpu"),
+        ("In Progress", "bi-tools"),
+        ("Waiting Parts", "bi-hourglass-split"),
+        ("Quality Check", "bi-patch-check"),
+        ("Ready", "bi-car-front"),
+        ("Delivered", "bi-check2-circle")
+    };
+}
+
+<div class="d-flex flex-column gap-4" style="max-width: 1000px; margin: 0 auto;">
+    <!-- Portal Header Banner -->
+    <div class="text-center py-3">
+        <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-2" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; font-size: 12px; font-weight: 700;">
+            <div class="db-status-dot"></div>
+            <span>LIVE CUSTOMER TELEMETRY PORTAL</span>
+        </div>
+        <h1 style="font-size: 32px; font-weight: 800;">Real-Time Vehicle Repair Tracker</h1>
+        <p class="text-secondary mx-auto" style="max-width: 600px; font-size: 15px;">
+            Track your car's progress on our workshop floor, review diagnostic findings, and see when your vehicle is ready for pickup.
+        </p>
+
+        <!-- Search Bar -->
+        <div class="mt-4" style="max-width: 550px; margin: 0 auto;">
+            <form method="get" class="d-flex gap-2">
+                <div class="input-group">
+                    <span class="input-group-text border-0" style="background-color: var(--bg-surface); color: var(--text-muted);">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" name="q" value="@ViewBag.Query" 
+                           class="form-control-custom border-start-0 text-uppercase" 
+                           placeholder="Enter License Plate (e.g. CAL-7892) or Job Card #" required autofocus />
+                </div>
+                <button type="submit" class="btn-apex btn-apex-primary px-4">
+                    Track Car
+                </button>
+            </form>
+            <div class="text-muted mt-2" style="font-size: 12px;">
+                Try sample plates: <a href="?q=CAL-7892" class="text-info fw-bold">CAL-7892</a> &bull; 
+                <a href="?q=WA-6628" class="text-info fw-bold">WA-6628</a> &bull; 
+                <a href="?q=NYK-3341" class="text-info fw-bold">NYK-3341</a>
+            </div>
+        </div>
+    </div>
+
+    @if (ViewBag.NotFoundMessage != null)
+    {
+        <div class="glass-card p-4 text-center">
+            <i class="bi bi-exclamation-circle text-warning fs-1 d-block mb-2"></i>
+            <h5 class="text-white">Record Not Found</h5>
+            <p class="text-secondary mb-0">@ViewBag.NotFoundMessage</p>
+        </div>
+    }
+
+    @if (Model != null)
+    {
+        <!-- Vehicle Status Dashboard -->
+        <div class="glass-card p-4" style="border-color: rgba(14, 165, 233, 0.4); box-shadow: 0 0 25px rgba(14, 165, 233, 0.15);">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4 pb-3 border-bottom border-secondary">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="plate-tag accent fs-4 px-3 py-1">@Model.Vehicle?.LicensePlate</span>
+                    <div>
+                        <h2 class="mb-0 text-white" style="font-size: 22px; font-weight: 800;">
+                            @Model.Vehicle?.Year @Model.Vehicle?.Make @Model.Vehicle?.Model
+                        </h2>
+                        <div class="text-muted" style="font-size: 13px;">
+                            Owner: <strong class="text-white">@Model.Vehicle?.OwnerName</strong> &bull; Job: <span class="text-info font-monospace">@Model.JobCardNumber</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-end">
+                    <span class="badge @Model.StatusBadgeClass fs-6 px-3 py-2">
+                        @Model.Status
+                    </span>
+                    <div class="text-muted mt-1" style="font-size: 12px;">
+                        Progress: <strong class="text-info">@Model.ProgressPercentage%</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stepper -->
+            <div class="stepper-container">
+                <div class="stepper-track">
+                    <div class="stepper-progress" style="width: @(Model.ProgressPercentage)%;"></div>
+                </div>
+                @for (int i = 0; i < stages.Length; i++)
+                {
+                    var (title, icon) = stages[i];
+                    bool isCompleted = i < currentStepIndex;
+                    bool isActive = i == currentStepIndex;
+                    <div class="step-item @(isActive ? "active" : "") @(isCompleted ? "completed" : "")">
+                        <div class="step-icon">
+                            <i class="bi @(isCompleted ? "bi-check-lg" : icon)"></i>
+                        </div>
+                        <div class="step-title">@title</div>
+                    </div>
+                }
+            </div>
+
+            <div class="row g-3 pt-3 border-top border-secondary mt-2">
+                <div class="col-6 col-md-3">
+                    <span class="text-muted" style="font-size: 11px; text-transform: uppercase;">Lead Specialist</span>
+                    <div class="fw-bold text-white">@(Model.LeadMechanic?.FullName ?? "Workshop Team")</div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <span class="text-muted" style="font-size: 11px; text-transform: uppercase;">Service Bay</span>
+                    <div class="fw-bold text-info">@Model.Bay</div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <span class="text-muted" style="font-size: 11px; text-transform: uppercase;">Est. Ready Time</span>
+                    <div class="fw-bold text-white">
+                        @(Model.EstimatedCompletionAt?.ToString("MMM dd, hh:mm tt") ?? "Pending Final Road Audit")
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <span class="text-muted" style="font-size: 11px; text-transform: uppercase;">Check-In Odometer</span>
+                    <div class="fw-bold text-white">@Model.OdometerIn.ToString("N0") km</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diagnostic & Scope Review -->
+        <div class="row g-4">
+            <div class="col-12 col-md-6">
+                <div class="glass-card h-100 p-4">
+                    <h5 class="text-info d-flex align-items-center gap-2 mb-3">
+                        <i class="bi bi-patch-check-fill text-success"></i>
+                        <span>Multi-Point Health Inspection</span>
+                    </h5>
+                    <div class="d-flex flex-column gap-2 mb-3" style="font-size: 13px;">
+                        <div class="d-flex justify-content-between align-items-center p-2 rounded" style="background: rgba(255,255,255,0.02);">
+                            <span>Engine Oil & Filter</span>
+                            <span class="badge @(Model.CheckEngineOil ? "bg-success" : "bg-warning text-dark")">@(Model.CheckEngineOil ? "Passed" : "Action Needed")</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center p-2 rounded" style="background: rgba(255,255,255,0.02);">
+                            <span>Brake Rotors & Friction Pads</span>
+                            <span class="badge @(Model.CheckBrakeSystem ? "bg-success" : "bg-danger")">@(Model.CheckBrakeSystem ? "Inspected" : "Attention Required")</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center p-2 rounded" style="background: rgba(255,255,255,0.02);">
+                            <span>Battery Voltage & Load Capacity</span>
+                            <span class="badge @(Model.CheckBatteryHealth ? "bg-success" : "bg-warning text-dark")">Passed (12.8V)</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center p-2 rounded" style="background: rgba(255,255,255,0.02);">
+                            <span>Tire Tread & Cold Inflation</span>
+                            <span class="badge @(Model.CheckTirePressureTread ? "bg-success" : "bg-warning text-dark")">Calibrated</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center p-2 rounded" style="background: rgba(255,255,255,0.02);">
+                            <span>Steering & Suspension Geometry</span>
+                            <span class="badge @(Model.CheckSuspensionSteering ? "bg-success" : "bg-warning text-dark")">Inspected</span>
+                        </div>
+                    </div>
+                    <div class="p-3 rounded-3" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3);">
+                        <span class="text-muted" style="font-size: 11px; text-transform: uppercase;">Auditor's Assessment</span>
+                        <div class="fw-bold text-success fs-6 mt-1">@Model.OverallInspectionGrade</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <div class="glass-card h-100 p-4">
+                    <h5 class="text-info d-flex align-items-center gap-2 mb-3">
+                        <i class="bi bi-card-checklist text-warning"></i>
+                        <span>Technician Actions & Installed Parts</span>
+                    </h5>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.WorkPerformedSummary))
+                    {
+                        <div class="p-3 rounded-3 mb-3" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle);">
+                            <span class="text-muted" style="font-size: 11px; text-transform: uppercase;">Technical Summary</span>
+                            <div class="text-white mt-1" style="font-size: 13px;">@Model.WorkPerformedSummary</div>
+                        </div>
+                    }
+
+                    <h6 class="text-secondary mb-2" style="font-size: 12px; text-transform: uppercase;">OEM Components Installed:</h6>
+                    @if (Model.PartItems.Any())
+                    {
+                        <ul class="list-unstyled mb-0 d-flex flex-column gap-2" style="font-size: 13px;">
+                            @foreach (var part in Model.PartItems)
+                            {
+                                <li class="d-flex justify-content-between align-items-center p-2 rounded" style="background: rgba(255,255,255,0.02);">
+                                    <span class="text-white">
+                                        <i class="bi bi-box-seam me-2 text-info"></i>@part.PartName (@part.Quantity x)
+                                    </span>
+                                    <span class="badge bg-secondary font-monospace" style="font-size: 10px;">
+                                        @(part.PartNumber ?? "OEM")
+                                    </span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="text-muted" style="font-size: 13px;">Standard service fluids & inspection only.</p>
+                    }
+
+                    @if (Model.Invoice != null)
+                    {
+                        <div class="mt-4 pt-3 border-top border-secondary d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-muted" style="font-size: 11px;">Invoice Generated</div>
+                                <div class="fw-bold text-success fs-5">$@Model.Invoice.GrandTotal.ToString("N2")</div>
+                            </div>
+                            <a asp-controller="Billing" asp-action="Print" asp-route-id="@Model.Invoice.Id" target="_blank" class="btn-apex btn-apex-primary">
+                                <i class="bi bi-printer"></i>
+                                <span>Print Bill</span>
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>

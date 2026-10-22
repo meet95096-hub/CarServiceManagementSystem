@@ -1,0 +1,159 @@
+@model IEnumerable<web.net.Models.Vehicle>
+@{
+    ViewData["Title"] = "Vehicle Registry";
+    var makes = ViewBag.Makes as List<string> ?? new List<string>();
+}
+
+<div class="d-flex flex-column gap-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+            <h1 class="mb-1" style="font-size: 26px; font-weight: 800;">Vehicle Registry</h1>
+            <p class="text-secondary mb-0" style="font-size: 14px;">Manage client vehicles, technical specifications, and historical service telemetry.</p>
+        </div>
+        <a asp-action="Create" class="btn-apex btn-apex-primary">
+            <i class="bi bi-plus-lg"></i>
+            <span>Register New Vehicle</span>
+        </a>
+    </div>
+
+    <!-- Filter and Search Bar -->
+    <div class="glass-card p-3">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-12 col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text border-0" style="background-color: var(--bg-surface); color: var(--text-muted);">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" name="search" value="@ViewBag.Search" 
+                           class="form-control-custom border-start-0" 
+                           placeholder="Search by license plate, VIN, model, or customer name..." />
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <select name="make" class="form-select-custom">
+                    <option value="">All Makes / Brands</option>
+                    @foreach (var m in makes)
+                    {
+                        <option value="@m" selected="@(ViewBag.SelectedMake == m)">@m</option>
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <select name="fuelType" class="form-select-custom">
+                    <option value="">All Fuel Types</option>
+                    <option value="Gasoline" selected="@(ViewBag.SelectedFuel == "Gasoline")">Gasoline / Petrol</option>
+                    <option value="Diesel" selected="@(ViewBag.SelectedFuel == "Diesel")">Diesel</option>
+                    <option value="Hybrid" selected="@(ViewBag.SelectedFuel == "Hybrid")">Hybrid</option>
+                    <option value="Electric" selected="@(ViewBag.SelectedFuel == "Electric")">Electric (EV)</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-2 d-flex gap-2">
+                <button type="submit" class="btn-apex btn-apex-primary w-100 justify-content-center">
+                    Filter
+                </button>
+                @if (!string.IsNullOrEmpty(ViewBag.Search) || !string.IsNullOrEmpty(ViewBag.SelectedMake) || !string.IsNullOrEmpty(ViewBag.SelectedFuel))
+                {
+                    <a asp-action="Index" class="btn-apex btn-apex-secondary" title="Reset Filters">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </a>
+                }
+            </div>
+        </form>
+    </div>
+
+    <!-- Vehicles List -->
+    <div class="glass-card">
+        @if (Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table-apex">
+                    <thead>
+                        <tr>
+                            <th>Plate & Vehicle</th>
+                            <th>Owner / Client</th>
+                            <th>VIN & Specs</th>
+                            <th>Odometer</th>
+                            <th>Service History</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <span class="plate-tag accent">@item.LicensePlate</span>
+                                        <div>
+                                            <div class="fw-bold text-white">@item.Year @item.Make @item.Model</div>
+                                            <div class="text-muted" style="font-size: 12px;">Color: @item.Color</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold text-white">@item.OwnerName</div>
+                                    <div class="text-secondary" style="font-size: 12px;">
+                                        <i class="bi bi-telephone me-1 text-muted"></i>@item.OwnerPhone
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(item.OwnerEmail))
+                                    {
+                                        <div class="text-muted" style="font-size: 11px;">
+                                            <i class="bi bi-envelope me-1"></i>@item.OwnerEmail
+                                        </div>
+                                    }
+                                </td>
+                                <td>
+                                    <div style="font-family: var(--font-mono); font-size: 11px; color: #94a3b8;">
+                                        @(item.Vin ?? "N/A")
+                                    </div>
+                                    <div class="d-flex align-items-center gap-1 mt-1">
+                                        <span class="badge" style="background: rgba(255,255,255,0.08); font-size: 10px;">@item.FuelType</span>
+                                        <span class="badge" style="background: rgba(255,255,255,0.08); font-size: 10px;">@item.Transmission</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="fw-bold" style="font-size: 14px;">@item.CurrentMileage.ToString("N0") <span class="text-muted" style="font-size: 11px;">km</span></div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="badge" style="background: rgba(14, 165, 233, 0.15); color: #38bdf8;">
+                                            @item.RepairJobs.Count Jobs
+                                        </span>
+                                        <span class="badge" style="background: rgba(139, 92, 246, 0.15); color: #c084fc;">
+                                            @item.Appointments.Count Appts
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="text-end">
+                                    <div class="dropdown d-inline-block">
+                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn-apex btn-apex-secondary" style="padding: 6px 12px; font-size: 12px;">
+                                            <span>Profile</span>
+                                            <i class="bi bi-chevron-right"></i>
+                                        </a>
+                                        <a asp-controller="Appointments" asp-action="Create" asp-route-vehicleId="@item.Id" 
+                                           class="btn-apex btn-apex-primary" style="padding: 6px 12px; font-size: 12px;" title="Book Service Appointment">
+                                            <i class="bi bi-calendar-plus"></i>
+                                        </a>
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn-apex btn-apex-secondary" style="padding: 6px 10px; font-size: 12px;" title="Edit Vehicle">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="p-5 text-center text-muted">
+                <i class="bi bi-car-front fs-1 d-block mb-3 text-secondary"></i>
+                <div class="fs-5 fw-bold text-white">No vehicles found</div>
+                <p class="text-secondary mb-3">No vehicles match your current search criteria.</p>
+                <a asp-action="Create" class="btn-apex btn-apex-primary">Register First Vehicle</a>
+            </div>
+        }
+    </div>
+</div>

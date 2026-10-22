@@ -1,0 +1,375 @@
+@model web.net.Models.Invoice
+@{
+    ViewData["Title"] = $"Invoice {Model.InvoiceNumber}";
+}
+
+<div class="d-flex flex-column gap-4" style="max-width: 1000px; margin: 0 auto;">
+    <!-- Breadcrumb & Top Bar -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <a asp-action="Index" class="text-secondary" style="font-size: 13px;">
+                    <i class="bi bi-arrow-left me-1"></i> Invoices & Billing
+                </a>
+                <span class="text-muted">/</span>
+                <span class="text-muted" style="font-size: 13px;">Invoice Statement</span>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <h1 class="mb-0 fw-bold text-info" style="font-family: var(--font-mono); font-size: 26px;">
+                    @Model.InvoiceNumber
+                </h1>
+                <span class="badge @(Model.Status == web.net.Models.InvoiceStatus.Paid ? "bg-success" : Model.Status == web.net.Models.InvoiceStatus.PartiallyPaid ? "bg-warning text-dark" : "bg-danger") fs-6 px-3 py-2">
+                    @Model.Status
+                </span>
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+            <a asp-action="Print" asp-route-id="@Model.Id" target="_blank" class="btn-apex btn-apex-primary">
+                <i class="bi bi-printer"></i>
+                <span>Print / Save PDF</span>
+            </a>
+
+            @if (Model.BalanceDue > 0)
+            {
+                <button type="button" class="btn-apex btn-apex-success" data-bs-toggle="modal" data-bs-target="#paymentModal">
+                    <i class="bi bi-credit-card"></i>
+                    <span>Record Payment</span>
+                </button>
+            }
+
+            <button type="button" class="btn-apex btn-apex-secondary" data-bs-toggle="modal" data-bs-target="#adjustModal">
+                <i class="bi bi-percent"></i>
+                <span>Adjust Discount / Tax</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Invoice Document Sheet -->
+    <div class="glass-card p-4 p-md-5">
+        <!-- Document Header -->
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-4 pb-4 border-bottom border-secondary">
+            <div>
+                <div class="d-flex align-items-center gap-2">
+                    <div class="brand-icon-box" style="width: 36px; height: 36px; font-size: 18px;">
+                        <i class="bi bi-gear-fill"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold fs-5 text-white" style="letter-spacing: 0.5px;">APEXAUTO DYNAMICS</div>
+                        <div class="text-muted" style="font-size: 11px;">Certified Automotive Repair & Performance Hub</div>
+                    </div>
+                </div>
+                <div class="text-secondary mt-3" style="font-size: 12px; line-height: 1.5;">
+                    100 Performance Way, Motor Speedway District<br />
+                    Phone: +1 (800) 555-APEX &bull; Tax ID: US-89410294-TX<br />
+                    Web: www.apexautoworks.com
+                </div>
+            </div>
+
+            <div class="text-md-end">
+                <div class="text-muted" style="font-size: 11px; text-transform: uppercase;">Invoice Number</div>
+                <div class="fw-bold text-info fs-5 font-monospace">@Model.InvoiceNumber</div>
+                <div class="text-muted mt-2" style="font-size: 11px; text-transform: uppercase;">Date Issued</div>
+                <div class="fw-semibold text-white" style="font-size: 13px;">@Model.InvoiceDate.ToString("MMMM dd, yyyy")</div>
+                <div class="text-muted mt-2" style="font-size: 11px; text-transform: uppercase;">Due Date</div>
+                <div class="fw-semibold text-warning" style="font-size: 13px;">@Model.DueDate.ToString("MMMM dd, yyyy")</div>
+            </div>
+        </div>
+
+        <!-- Bill To & Vehicle Details -->
+        <div class="row g-4 py-4 border-bottom border-secondary">
+            <div class="col-12 col-md-6">
+                <div class="text-muted mb-2" style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Billed To (Client):</div>
+                <div class="fw-bold text-white fs-5">@Model.Vehicle?.OwnerName</div>
+                <div class="text-secondary mt-1" style="font-size: 13px;">
+                    <div><i class="bi bi-telephone text-primary me-2"></i>@Model.Vehicle?.OwnerPhone</div>
+                    @if (!string.IsNullOrEmpty(Model.Vehicle?.OwnerEmail))
+                    {
+                        <div><i class="bi bi-envelope text-primary me-2"></i>@Model.Vehicle?.OwnerEmail</div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Vehicle?.OwnerAddress))
+                    {
+                        <div><i class="bi bi-geo-alt text-primary me-2"></i>@Model.Vehicle?.OwnerAddress</div>
+                    }
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <div class="text-muted mb-2" style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Vehicle & Job Information:</div>
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="plate-tag accent fs-6">@Model.Vehicle?.LicensePlate</span>
+                    <span class="fw-bold text-white fs-6">@Model.Vehicle?.Year @Model.Vehicle?.Make @Model.Vehicle?.Model</span>
+                </div>
+                <div class="text-secondary" style="font-size: 12px; line-height: 1.6;">
+                    <div>VIN: <span class="font-monospace text-info">@(Model.Vehicle?.Vin ?? "N/A")</span></div>
+                    <div>Job Card #: <a asp-controller="RepairTracking" asp-action="Details" asp-route-id="@Model.RepairJobCardId" class="text-info font-monospace">@Model.RepairJobCard?.JobCardNumber</a></div>
+                    <div>Lead Mechanic: <span class="text-white">@(Model.RepairJobCard?.LeadMechanic?.FullName ?? "Workshop Team")</span> (@(Model.RepairJobCard?.Bay ?? "Bay 1"))</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Itemized Labor Breakdown -->
+        <div class="py-4">
+            <h6 class="text-info text-uppercase fw-bold mb-3 d-flex align-items-center gap-2" style="font-size: 13px; letter-spacing: 0.5px;">
+                <i class="bi bi-person-gear"></i>
+                <span>Mechanical Labor & Diagnostic Services</span>
+            </h6>
+            @if (Model.RepairJobCard?.LaborItems != null && Model.RepairJobCard.LaborItems.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table-apex">
+                        <thead>
+                            <tr>
+                                <th>Service Task</th>
+                                <th class="text-center">Hours</th>
+                                <th class="text-end">Hourly Rate</th>
+                                <th class="text-end">Total Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var labor in Model.RepairJobCard.LaborItems)
+                            {
+                                <tr>
+                                    <td class="text-white fw-semibold">@labor.Description</td>
+                                    <td class="text-center text-secondary">@labor.Hours.ToString("0.0") hrs</td>
+                                    <td class="text-end text-muted">$@labor.HourlyRate.ToString("F2")</td>
+                                    <td class="text-end fw-bold text-info">$@labor.LineTotal.ToString("F2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-end fw-bold text-secondary">Labor Subtotal:</td>
+                                <td class="text-end fw-bold text-white">$@Model.LaborTotal.ToString("N2")</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted" style="font-size: 13px;">No itemized labor logged for this service.</p>
+            }
+        </div>
+
+        <!-- Itemized Parts Breakdown -->
+        <div class="py-4 border-top border-secondary">
+            <h6 class="text-info text-uppercase fw-bold mb-3 d-flex align-items-center gap-2" style="font-size: 13px; letter-spacing: 0.5px;">
+                <i class="bi bi-box-seam"></i>
+                <span>Installed Genuine OEM Spare Parts & Consumables</span>
+            </h6>
+            @if (Model.RepairJobCard?.PartItems != null && Model.RepairJobCard.PartItems.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table-apex">
+                        <thead>
+                            <tr>
+                                <th>Part Description</th>
+                                <th>Part Number / SKU</th>
+                                <th class="text-center">Qty</th>
+                                <th class="text-end">Unit Price</th>
+                                <th class="text-end">Total Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var part in Model.RepairJobCard.PartItems)
+                            {
+                                <tr>
+                                    <td class="text-white fw-semibold">@part.PartName</td>
+                                    <td>
+                                        <span class="badge" style="background: rgba(255,255,255,0.06); font-family: var(--font-mono); font-size: 11px;">
+                                            @(part.PartNumber ?? "OEM")
+                                        </span>
+                                    </td>
+                                    <td class="text-center text-secondary">@part.Quantity</td>
+                                    <td class="text-end text-muted">$@part.UnitPrice.ToString("F2")</td>
+                                    <td class="text-end fw-bold text-info">$@part.LineTotal.ToString("F2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="4" class="text-end fw-bold text-secondary">Parts Subtotal:</td>
+                                <td class="text-end fw-bold text-white">$@Model.PartsTotal.ToString("N2")</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted" style="font-size: 13px;">No spare parts billed for this service.</p>
+            }
+        </div>
+
+        <!-- Financial Summary Totals Table -->
+        <div class="row justify-content-end py-4 border-top border-secondary">
+            <div class="col-12 col-md-6 col-lg-5">
+                <div class="d-flex flex-column gap-2" style="font-size: 14px;">
+                    <div class="d-flex justify-content-between text-secondary">
+                        <span>Labor Subtotal:</span>
+                        <span class="text-white fw-semibold">$@Model.LaborTotal.ToString("N2")</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-secondary">
+                        <span>Parts Subtotal:</span>
+                        <span class="text-white fw-semibold">$@Model.PartsTotal.ToString("N2")</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-secondary border-top border-secondary pt-2">
+                        <span>Net Subtotal:</span>
+                        <span class="text-white fw-bold">$@Model.SubTotal.ToString("N2")</span>
+                    </div>
+
+                    @if (Model.DiscountPercentage > 0 || Model.DiscountAmount > 0)
+                    {
+                        <div class="d-flex justify-content-between text-warning">
+                            <span>Promotional Discount (@Model.DiscountPercentage%):</span>
+                            <span>-$@Model.DiscountAmount.ToString("N2")</span>
+                        </div>
+                    }
+
+                    <div class="d-flex justify-content-between text-secondary">
+                        <span>State & Federal Tax / GST (@Model.TaxRate%):</span>
+                        <span class="text-white fw-semibold">$@Model.TaxAmount.ToString("N2")</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center border-top border-secondary pt-3 mt-1">
+                        <span class="fs-5 fw-bold text-white">Grand Total:</span>
+                        <span class="fs-4 fw-bold text-info">$@Model.GrandTotal.ToString("N2")</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between text-success pt-2">
+                        <span>Amount Paid:</span>
+                        <span class="fw-bold">$@Model.AmountPaid.ToString("N2")</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary">
+                        <span class="fw-bold @(Model.BalanceDue > 0 ? "text-danger" : "text-muted")">Balance Due:</span>
+                        <span class="fs-5 fw-bold @(Model.BalanceDue > 0 ? "text-danger" : "text-success")">
+                            $@Model.BalanceDue.ToString("N2")
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Settlement & Warranty Terms -->
+        <div class="p-4 rounded-3 mt-3" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle);">
+            @if (Model.Status == web.net.Models.InvoiceStatus.Paid || Model.Status == web.net.Models.InvoiceStatus.PartiallyPaid)
+            {
+                <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom border-secondary">
+                    <i class="bi bi-patch-check-fill text-success fs-3"></i>
+                    <div>
+                        <div class="fw-bold text-success" style="font-size: 14px;">Payment Recorded: @Model.PaymentMethod</div>
+                        <div class="text-muted" style="font-size: 12px;">
+                            Ref: <span class="font-monospace text-white">@(Model.TransactionReference ?? "TXN-AUTO")</span> &bull; 
+                            Date: @(Model.PaidAt?.ToString("MMM dd, yyyy hh:mm tt") ?? "Settled")
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <div class="text-muted" style="font-size: 12px; line-height: 1.5;">
+                <strong class="text-secondary">Warranty & Service Terms:</strong><br />
+                @Model.Notes
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Record Payment -->
+<div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background-color: var(--bg-card); border: 1px solid var(--border-subtle); color: #fff;">
+            <div class="modal-header border-bottom border-secondary pb-3">
+                <h5 class="modal-title text-success" id="paymentModalLabel">
+                    <i class="bi bi-wallet2 me-2"></i>Record Customer Payment
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="RecordPayment" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <div class="modal-body py-4 d-flex flex-column gap-3">
+                    <div class="p-3 rounded" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle);">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted" style="font-size: 12px;">Invoice Total:</span>
+                            <span class="text-white fw-bold">$@Model.GrandTotal.ToString("N2")</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted" style="font-size: 12px;">Remaining Balance:</span>
+                            <span class="text-danger fw-bold fs-6">$@Model.BalanceDue.ToString("N2")</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="form-label-custom">Payment Amount ($):</label>
+                        <div class="input-group">
+                            <span class="input-group-text border-0" style="background-color: var(--bg-surface); color: var(--text-muted);">$</span>
+                            <input type="number" step="0.01" name="amount" class="form-control-custom" value="@Model.BalanceDue.ToString("F2")" max="@Model.BalanceDue" min="0.01" required />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="form-label-custom">Payment Method:</label>
+                        <select name="paymentMethod" class="form-select-custom">
+                            <option value="Credit Card (Visa / Mastercard)">Credit Card (Visa / Mastercard)</option>
+                            <option value="Debit Card">Debit Card</option>
+                            <option value="Cash">Cash Settlement</option>
+                            <option value="UPI / Instant Bank Transfer">UPI / Instant Bank Transfer</option>
+                            <option value="Apple Pay / Google Wallet">Apple Pay / Google Wallet</option>
+                            <option value="Fleet Corporate Account">Fleet Corporate Account</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="form-label-custom">Transaction / Approval Reference:</label>
+                        <input type="text" name="transactionReference" class="form-control-custom" placeholder="e.g. TXN-89410294" />
+                    </div>
+                </div>
+                <div class="modal-footer border-top border-secondary pt-3">
+                    <button type="button" class="btn-apex btn-apex-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-apex btn-apex-success">Confirm & Save Payment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Adjust Discount and Taxes -->
+<div class="modal fade" id="adjustModal" tabindex="-1" aria-labelledby="adjustModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background-color: var(--bg-card); border: 1px solid var(--border-subtle); color: #fff;">
+            <div class="modal-header border-bottom border-secondary pb-3">
+                <h5 class="modal-title" id="adjustModalLabel">
+                    <i class="bi bi-percent text-warning me-2"></i>Adjust Discount & Taxes
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="Recalculate" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <div class="modal-body py-4 d-flex flex-column gap-3">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label class="form-label-custom">Discount (%):</label>
+                            <input type="number" step="0.5" name="discountPercentage" class="form-control-custom" value="@Model.DiscountPercentage" min="0" max="100" required />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label-custom">Tax Rate (%):</label>
+                            <input type="number" step="0.5" name="taxRate" class="form-control-custom" value="@Model.TaxRate" min="0" max="50" required />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="form-label-custom">Warranty Terms / Invoice Remarks:</label>
+                        <textarea name="notes" rows="3" class="form-control-custom">@Model.Notes</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top border-secondary pt-3">
+                    <button type="button" class="btn-apex btn-apex-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-apex btn-apex-primary">Recalculate Bill</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

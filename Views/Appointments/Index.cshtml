@@ -1,0 +1,161 @@
+@model IEnumerable<web.net.Models.ServiceAppointment>
+@{
+    ViewData["Title"] = "Service Appointments";
+}
+
+<div class="d-flex flex-column gap-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+            <h1 class="mb-1" style="font-size: 26px; font-weight: 800;">Service Appointments</h1>
+            <p class="text-secondary mb-0" style="font-size: 14px;">Schedule maintenance, allocate workshop bays, and convert intake bookings into live repair jobs.</p>
+        </div>
+        <a asp-action="Create" class="btn-apex btn-apex-primary">
+            <i class="bi bi-calendar-plus"></i>
+            <span>Book New Appointment</span>
+        </a>
+    </div>
+
+    <!-- Filters & Search -->
+    <div class="glass-card p-3">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-12 col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text border-0" style="background-color: var(--bg-surface); color: var(--text-muted);">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" name="search" value="@ViewBag.Search" 
+                           class="form-control-custom border-start-0" 
+                           placeholder="Search by code, plate, service or client..." />
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <select name="status" class="form-select-custom">
+                    <option value="">All Statuses</option>
+                    <option value="Scheduled" selected="@(ViewBag.SelectedStatus?.ToString() == "Scheduled")">Scheduled</option>
+                    <option value="Confirmed" selected="@(ViewBag.SelectedStatus?.ToString() == "Confirmed")">Confirmed</option>
+                    <option value="InService" selected="@(ViewBag.SelectedStatus?.ToString() == "InService")">In Service (Active)</option>
+                    <option value="Completed" selected="@(ViewBag.SelectedStatus?.ToString() == "Completed")">Completed</option>
+                    <option value="Cancelled" selected="@(ViewBag.SelectedStatus?.ToString() == "Cancelled")">Cancelled</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <input type="date" name="date" value="@ViewBag.SelectedDate" class="form-control-custom" />
+            </div>
+            <div class="col-12 col-md-2 d-flex gap-2">
+                <button type="submit" class="btn-apex btn-apex-primary w-100 justify-content-center">
+                    Filter
+                </button>
+                @if (ViewBag.SelectedStatus != null || !string.IsNullOrEmpty(ViewBag.SelectedDate) || !string.IsNullOrEmpty(ViewBag.Search))
+                {
+                    <a asp-action="Index" class="btn-apex btn-apex-secondary" title="Reset">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </a>
+                }
+            </div>
+        </form>
+    </div>
+
+    <!-- Appointments Table -->
+    <div class="glass-card">
+        @if (Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table-apex">
+                    <thead>
+                        <tr>
+                            <th>Code & Vehicle</th>
+                            <th>Service Package</th>
+                            <th>Scheduled Slot</th>
+                            <th>Mechanic & Bay</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="fw-bold text-info" style="font-family: var(--font-mono); font-size: 13px;">
+                                        @item.AppointmentCode
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2 mt-1">
+                                        <span class="plate-tag" style="font-size: 11px; padding: 2px 6px;">@item.Vehicle?.LicensePlate</span>
+                                        <span class="text-white fw-semibold" style="font-size: 13px;">@item.Vehicle?.Make @item.Vehicle?.Model</span>
+                                    </div>
+                                    <div class="text-muted" style="font-size: 11px;">
+                                        Client: @item.Vehicle?.OwnerName &bull; @item.Vehicle?.OwnerPhone
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold text-white" style="font-size: 13px;">@item.ServiceTitle</div>
+                                    @if (item.ServicePackage != null)
+                                    {
+                                        <span class="badge" style="background: rgba(14, 165, 233, 0.15); color: #38bdf8; font-size: 10px;">
+                                            @item.ServicePackage.Category
+                                        </span>
+                                    }
+                                    <div class="text-muted mt-1" style="font-size: 11px;">
+                                        Est. Price: <strong class="text-white">${item.EstimatedCost.ToString("F2")}</strong>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-white">@item.ScheduledDate.ToString("ddd, MMM dd, yyyy")</div>
+                                    <div class="text-secondary" style="font-size: 12px;">
+                                        <i class="bi bi-clock me-1 text-muted"></i>@item.TimeSlot
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="text-white">@(item.Mechanic?.FullName ?? "Unassigned")</div>
+                                    <div class="text-muted" style="font-size: 11px;">@item.Bay</div>
+                                </td>
+                                <td>
+                                    <span class="badge @(item.Status == web.net.Models.AppointmentStatus.InService ? "bg-warning text-dark" : item.Status == web.net.Models.AppointmentStatus.Completed ? "bg-success" : item.Status == web.net.Models.AppointmentStatus.Confirmed ? "bg-primary" : item.Status == web.net.Models.AppointmentStatus.Cancelled ? "bg-danger" : "bg-info text-dark")">
+                                        @item.Status
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end align-items-center gap-2">
+                                        @if (!item.LinkedRepairJobId.HasValue && item.Status != web.net.Models.AppointmentStatus.Cancelled)
+                                        {
+                                            <form asp-action="ConvertToJobCard" asp-route-id="@item.Id" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn-apex btn-apex-amber" style="padding: 5px 10px; font-size: 11px;" title="Initialize Workshop Job Card">
+                                                    <i class="bi bi-tools"></i>
+                                                    <span>Open Job</span>
+                                                </button>
+                                            </form>
+                                        }
+                                        else if (item.LinkedRepairJobId.HasValue)
+                                        {
+                                            <a asp-controller="RepairTracking" asp-action="Details" asp-route-id="@item.LinkedRepairJobId" 
+                                               class="btn-apex btn-apex-secondary" style="padding: 5px 10px; font-size: 11px; color: #38bdf8;">
+                                                <i class="bi bi-wrench"></i>
+                                                <span>Active Card</span>
+                                            </a>
+                                        }
+
+                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn-apex btn-apex-secondary" style="padding: 5px 10px; font-size: 11px;">
+                                            <span>Details</span>
+                                            <i class="bi bi-chevron-right"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="p-5 text-center text-muted">
+                <i class="bi bi-calendar-x fs-1 d-block mb-3 text-secondary"></i>
+                <div class="fs-5 fw-bold text-white">No appointments found</div>
+                <p class="text-secondary mb-3">No bookings correspond to your query.</p>
+                <a asp-action="Create" class="btn-apex btn-apex-primary">Book New Service</a>
+            </div>
+        }
+    </div>
+</div>
